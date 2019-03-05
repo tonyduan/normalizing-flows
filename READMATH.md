@@ -7,8 +7,8 @@ Last update: February 2019.
 Work in progress implementation of hybrid models [1] in PyTorch, built on normalizing flows [2].
 
 We implement so far the following flows:
-- Planar flows
-- Radial flows
+- Planar flows; $f(x) = x + u h(w^\intercal z + b)$
+- Radial flows; $f(x) = x + \frac{\beta}{\alpha + |x - x_0|}(x - x_0)$
 
 #### Usage
 
