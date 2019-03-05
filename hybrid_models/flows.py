@@ -5,6 +5,7 @@ import torch.nn.init as init
 import torch.nn.functional as F
 
 
+# supported non-linearities: note that the function must be invertible
 functional_derivatives = {
     torch.tanh: lambda x: 1 - torch.pow(torch.tanh(x), 2),
     F.leaky_relu: lambda x: (x > 0).type(torch.FloatTensor) + \
@@ -76,8 +77,7 @@ class Radial(nn.Module):
     """
     def __init__(self, dim):
         super().__init__()
-        self.h = nonlinearity
-        self.z0 = nn.Parameter(torch.Tensor(dim))
+        self.x0 = nn.Parameter(torch.Tensor(dim))
         self.log_alpha = nn.Parameter(torch.Tensor(1))
         self.beta = nn.Parameter(torch.Tensor(1))
 
@@ -88,14 +88,17 @@ class Radial(nn.Module):
 
     def forward(self, x):
         """
+        Given x, returns z and the log-determinant log|df/dx|.
         """
-        r = torch.norm(z - self.z0)
+        m, n = x.shape
+        r = torch.norm(x - self.x0)
         h = 1 / (torch.exp(self.log_alpha) + r)
         beta = -torch.exp(self.log_alpha) + torch.log(1 + torch.exp(self.beta))
-        z = x + beta * h * (z - self.z0)
-        log_det = (d - 1) * torch.log(1 + beta * h) + \
-                  torch.log(1 + beta * h + beta * 1)
-
+        z = x + beta * h * (x - self.x0)
+        log_det = (n - 1) * torch.log(1 + beta * h) + \
+                  torch.log(1 + beta * h - \
+                            beta * r / (torch.exp(self.log_alpha) + r) ** 2)
+        return z, log_det
 
 
 class AffineCouplingLayer(nn.Module):
@@ -117,7 +120,6 @@ class AffineCouplingLayer(nn.Module):
         lower = x[:self.idx]
         upper = t_transform + x[self.idx:] * torch.exp(s_transform)
         z = torch.stack([lower, upper])
-
 
     def backward(self, z):
         pass

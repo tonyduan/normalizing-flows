@@ -8,18 +8,15 @@ import torch.nn.functional as F
 from argparse import ArgumentParser
 from torch.distributions import MultivariateNormal
 
-from hybrid_models.flows import Planar
+from hybrid_models.flows import Planar, Radial
 from hybrid_models.models import NormalizingFlowModel
 
 
 def gen_data(n=512):
-    x1 = np.random.randn(n) * 2
-    x2 = np.random.randn(n) + 0.25 * x1 ** 2
-    return np.c_[x1, x2]
+    return np.r_[np.random.randn(n // 3, 2) + np.array([0, 6]),
+                 np.random.randn(n // 3, 2) + np.array([2.5, 3]),
+                 np.random.randn(n // 3, 2) + np.array([-2.5, 3])]
 
-def gen_mixture_data(n=512):
-    return np.r_[np.random.randn(n // 2, 2) + np.array([5, 3]),
-                 np.random.randn(n // 2, 2) + np.array([-5, 5])]
 
 def plot_data(x, color="grey"):
     plt.scatter(x[:,0], x[:,1], marker="x", color=color)
@@ -31,15 +28,15 @@ if __name__ == "__main__":
 
     argparser = ArgumentParser()
     argparser.add_argument("--n", default=512, type=int)
-    argparser.add_argument("--flows", default=3, type=int)
-    argparser.add_argument("--iterations", default=1000, type=int)
+    argparser.add_argument("--flows", default=5, type=int)
+    argparser.add_argument("--iterations", default=1500, type=int)
     argparser.add_argument("--use-mixture", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
-    flows = [Planar(dim=2, nonlinearity=torch.tanh) for _ in range(args.flows)]
+    flows = [Radial(dim=2) for _ in range(args.flows)]
     prior = MultivariateNormal(torch.zeros(2), torch.eye(2))
     model = NormalizingFlowModel(prior, flows)
 
