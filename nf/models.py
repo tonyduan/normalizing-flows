@@ -2,16 +2,6 @@ import torch
 import torch.nn as nn
 
 
-class HybridModel(nn.Module):
-    def __init__(self, glm, flow):
-        self.glm = glm
-        self.flow = flow
-
-
-class GeneralizedLinearModel(nn.Module):
-    def __init__(self, prior):
-        pass
-
 class NormalizingFlowModel(nn.Module):
 
     def __init__(self, prior, flows):

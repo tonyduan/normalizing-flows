@@ -8,8 +8,8 @@ import torch.nn.functional as F
 from argparse import ArgumentParser
 from torch.distributions import MultivariateNormal
 
-from hybrid_models.flows import Planar, Radial
-from hybrid_models.models import NormalizingFlowModel
+from nf.flows import Planar, Radial
+from nf.models import NormalizingFlowModel
 
 
 def gen_data(n=512):
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     argparser = ArgumentParser()
     argparser.add_argument("--n", default=512, type=int)
-    argparser.add_argument("--flows", default=5, type=int)
+    argparser.add_argument("--flows", default=10, type=int)
     argparser.add_argument("--iterations", default=1500, type=int)
     argparser.add_argument("--use-mixture", action="store_true")
     args = argparser.parse_args()
