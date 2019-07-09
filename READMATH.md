@@ -1,14 +1,16 @@
-### Hybrid Models from Normalizing Flows
+### Normalizing Flows Models
 
-Last update: February 2019.
+Last update: June 2019.
 
 ---
 
-Work in progress implementation of hybrid models [1] in PyTorch, built on normalizing flows [2].
+Implementations of simple normalizing flow models [1] in PyTorch.
 
 We implement so far the following flows:
 - Planar flows; $f(x) = x + u h(w^\intercal z + b)$
 - Radial flows; $f(x) = x + \frac{\beta}{\alpha + |x - x_0|}(x - x_0)$
+
+Future work remains to implement RealNVP [2]. 
 
 #### Usage
 
@@ -16,10 +18,10 @@ Todo.
 
 #### References
 
-[1] Nalisnick, E., Matsukawa, A., Teh, Y. W., Gorur, D. & Lakshminarayanan, B. Hybrid Models with Deep and Invertible Features. (2019).
+[1] Rezende, D. J. & Mohamed, S. Variational Inference with Normalizing Flows. in Proceedings of the 32nd International Conference on Machine Learning - Volume 37 - Volume 37 1530–1538 (JMLR.org, 2015).
 
-[2] Rezende, D. J. & Mohamed, S. Variational Inference with Normalizing Flows. in Proceedings of the 32nd International Conference on Machine Learning - Volume 37 - Volume 37 1530–1538 (JMLR.org, 2015).
+[2] Dinh, L., Krueger, D., and Bengio, Y. (2014). NICE: Non-linear Independent Components Estimation.
 
 #### License
 
-This library is available under the MIT License.
+This code is available under the MIT License.
