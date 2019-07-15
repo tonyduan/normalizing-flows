@@ -10,11 +10,7 @@ class NormalizingFlowModel(nn.Module):
         self.flows = nn.ModuleList(flows)
 
     def forward(self, x):
-        """
-        Returns
-        -------
-        """
-        m, n = x.shape
+        m, _ = x.shape
         log_det = torch.zeros(m)
         for flow in self.flows:
             x, ld = flow.forward(x)
@@ -23,11 +19,16 @@ class NormalizingFlowModel(nn.Module):
         return z, prior_logprob, log_det
 
     def backward(self, z):
-        prior_logprob = self.prior.log_prob(z)
-        return x, prior_logprob
+        m, _ = z.shape
+        log_det = torch.zeros(m)
+        for flow in self.flows[::-1]:
+            z, ld = flow.backward(z)
+            log_det += ld
+        x = z
+        return x, log_det
 
     def sample(self, n_samples):
         z = self.prior.sample((n_samples,))
-        x, _, _ = self.backward(z)
+        x, _ = self.backward(z)
         return x
 

@@ -9,12 +9,11 @@ Implementations of simple normalizing flow models [1] in PyTorch.
 We implement so far the following flows:
 - Planar flows; $f(x) = x + u h(w^\intercal z + b)$
 - Radial flows; $f(x) = x + \frac{\beta}{\alpha + |x - x_0|}(x - x_0)$
+- Real NVP; affine coupling layers [2]
 
-Future work remains to implement RealNVP [2]. 
+Todo: autoregressive flows.
 
-#### Usage
-
-Todo.
+Note that planar and radial flows admit no algebraic inverse.
 
 #### References
 

@@ -22,10 +22,6 @@ class Planar(nn.Module):
         z = f(x) = x + u h(wᵀx + b)
 
     [Rezende and Mohamed, 2015]
-
-    Parameters
-    ----------
-    dim:
     """
     def __init__(self, dim, nonlinearity=torch.tanh):
         super().__init__()
@@ -71,9 +67,6 @@ class Radial(nn.Module):
         z = f(x) = = x + β h(α, r)(z − z0)
 
     [Rezende and Mohamed 2015]
-
-    Parameters
-    ----------
     """
     def __init__(self, dim):
         super().__init__()
@@ -101,25 +94,60 @@ class Radial(nn.Module):
         return z, log_det
 
 
-class AffineCouplingLayer(nn.Module):
+class FCNN(nn.Module):
     """
-    Non-volume preserving flow.
-
-    Parameters
-    ----------
+    Simple fully connected neural network.
     """
-    def __init__(self, dim, t=nn.Linear, s=nn.Linear, permutation=None):
-        self.t = t
-        self.s = s
-        self.idx = dim // 2
-        self.permutation = permutation
+    def __init__(self, in_dim, out_dim, hidden_dim):
+        super().__init__()
+        self.network = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, out_dim),
+        )
 
     def forward(self, x):
-        t_transform = self.t(x[:self.idx])
-        s_transform = self.s(x[:self.idx])
-        lower = x[:self.idx]
-        upper = t_transform + x[self.idx:] * torch.exp(s_transform)
-        z = torch.stack([lower, upper])
+        return self.network(x)
+
+
+class AffineCouplingLayer(nn.Module):
+    """
+    Non-volume preserving flow aka RealNVP.
+
+    [Dinh et. al. 2017]
+    """
+    def __init__(self, dim, hidden_dim, base_network=FCNN):
+        super().__init__()
+        self.dim = dim
+        self.t1 = base_network(dim // 2, dim // 2, hidden_dim)
+        self.s1 = base_network(dim // 2, dim // 2, hidden_dim)
+        self.t2 = base_network(dim // 2, dim // 2, hidden_dim)
+        self.s2 = base_network(dim // 2, dim // 2, hidden_dim)
+
+    def forward(self, x):
+        lower, upper = x[:,:self.dim // 2], x[:,self.dim // 2:]
+        t1_transformed = self.t1(lower)
+        s1_transformed = self.s1(lower)
+        upper = t1_transformed + upper * torch.exp(s1_transformed)
+        t2_transformed = self.t2(upper)
+        s2_transformed = self.s2(upper)
+        lower = t2_transformed + lower * torch.exp(s2_transformed)
+        z = torch.cat([lower, upper], dim=1)
+        log_det = torch.sum(s1_transformed, dim=1) + \
+                  torch.sum(s2_transformed, dim=1)
+        return z, log_det
 
     def backward(self, z):
-        pass
+        lower, upper = z[:,:self.dim // 2], z[:,self.dim // 2:]
+        t2_transformed = self.t2(upper)
+        s2_transformed = self.s2(upper)
+        lower = (lower - t2_transformed) * torch.exp(-s2_transformed)
+        t1_transformed = self.t1(lower)
+        s1_transformed = self.s1(lower)
+        upper = (upper - t1_transformed) * torch.exp(-s1_transformed)
+        x = torch.cat([lower, upper], dim=1)
+        log_det = torch.sum(-s1_transformed, dim=1) + \
+                  torch.sum(-s2_transformed, dim=1)
+        return x, log_det
