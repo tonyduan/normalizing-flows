@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from argparse import ArgumentParser
 from torch.distributions import MultivariateNormal
 
-from nf.flows import AffineCouplingLayer
+from nf.flows import MAF
 from nf.models import NormalizingFlowModel
 
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
-    flows = [AffineCouplingLayer(dim=2, hidden_dim=4) for _ in range(args.flows)]
+    flows = [MAF(dim=2, hidden_dim=16) for _ in range(args.flows)]
     prior = MultivariateNormal(torch.zeros(2), torch.eye(2))
     model = NormalizingFlowModel(prior, flows)
 
@@ -55,25 +55,28 @@ if __name__ == "__main__":
     for i in range(args.iterations):
         optimizer.zero_grad()
         z, prior_logprob, log_det = model(x)
+        logprob = prior_logprob + log_det
         loss = -torch.mean(prior_logprob + log_det)
         loss.backward()
         optimizer.step()
         if i % 100 == 0:
             logger.info(f"Iter: {i}\t" +
+                        f"Logprob: {logprob.mean().data:.2f}\t" +
                         f"Prior: {prior_logprob.mean().data:.2f}\t" +
                         f"LogDet: {log_det.mean().data:.2f}")
 
     plot_data(x, color="grey")
     plot_data(z.data, color="black", alpha=0.5)
+    plt.title("Latent space")
     plt.show()
 
     samples = model.sample(500).data
-    plot_data(x, color="grey")
     plot_data(samples, color="black", alpha=0.5)
+    plt.title("Reconstructed sample")
     plt.show()
 
     for f in flows:
         x = f(x)[0].data
-        plot_data(x)
+        plot_data(x, color="black", alpha=0.5)
         plt.show()
 
