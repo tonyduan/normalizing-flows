@@ -121,7 +121,7 @@ class AffineCouplingLayer(nn.Module):
 
     [Dinh et. al. 2017]
     """
-    def __init__(self, dim, hidden_dim, base_network=FCNN):
+    def __init__(self, dim, hidden_dim = 128, base_network=FCNN):
         super().__init__()
         self.dim = dim
         self.t1 = base_network(dim // 2, dim // 2, hidden_dim)
@@ -162,7 +162,7 @@ class MAF(nn.Module):
 
     [Papamakarios et al. 2018]
     """
-    def __init__(self, dim, hidden_dim, base_network=FCNN):
+    def __init__(self, dim, hidden_dim = 128, base_network=FCNN):
         super().__init__()
         self.dim = dim
         self.layers = nn.ModuleList()
