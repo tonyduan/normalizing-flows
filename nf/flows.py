@@ -1,4 +1,7 @@
 import math
+import numpy as np
+import scipy as sp
+import scipy.linalg
 import torch
 import torch.nn as nn
 import torch.nn.init as init
@@ -197,3 +200,40 @@ class MAF(nn.Module):
             x[:, i] = mu + torch.exp(alpha) * z[:, i]
             log_det += alpha
         return x, log_det
+
+
+class OneByOneConv(nn.Module):
+    """
+    Invertible 1x1 convolution.
+
+    [Kingma and Dhariwal, 2018.]
+    """
+    def __init__(self, dim):
+        super().__init__()
+        self.dim = dim
+        W, _ = sp.linalg.qr(np.random.randn(dim, dim))
+        P, L, U = sp.linalg.lu(W)
+        self.P = torch.tensor(P, dtype=torch.float)
+        self.L = nn.Parameter(torch.tensor(L, dtype=torch.float))
+        self.S = nn.Parameter(torch.tensor(np.diag(U), dtype=torch.float))
+        self.U = nn.Parameter(torch.tensor(U - np.diag(U), dtype=torch.float))
+        self.W_inv = None
+
+    def forward(self, x):
+        L = torch.tril(self.L, diagonal = -1) + torch.diag(torch.ones(self.dim))
+        U = torch.triu(self.U, diagonal = 1)
+        z = x @ self.P @ L @ (U + torch.diag(self.S))
+        log_det = torch.sum(torch.log(torch.abs(self.S)))
+        return z, log_det
+
+    def backward(self, z):
+        if not self.W_inv:
+            L = torch.tril(self.L, diagonal = -1) + \
+                torch.diag(torch.ones(self.dim))
+            U = torch.triu(self.U, diagonal = 1)
+            W = self.P @ L @ (U + torch.diag(self.S))
+            self.W_inv = torch.inverse(W)
+        x = z @ self.W_inv
+        log_det = -torch.sum(torch.log(torch.abs(self.S)))
+        return x, log_det
+
