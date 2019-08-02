@@ -12,6 +12,8 @@ We implement so far the following flows:
 - Real NVP; affine coupling layer; $f(x^{(2)}) = t(x^{(1)}) + x^{(2)}\odot\exp s(x^{(1)}) $ [2]
 - Masked Autoregressive Flow (MAF); $f(x_i) = (x_i - \mu(x_{<i})) / \exp(\alpha(x_{<i}))$ [3]
 - Invertible 1x1 Convolution; $f(x) = Wx$ where $W$ is square [4]
+- Autoregressive Neural Spline Flow (NSF-AF); $f(x_i) = \mathrm{RQS}_{\theta(x_{<i})}(x_i)$ [5] 
+- Coupling Neural Spline Flow (NSF-CL); $f(x^{(2)}) = \mathrm{RQS}_{\theta(x^{(1)})}(x^{(2)})$ [5] 
 
 Note that planar and radial flows admit no algebraic inverse.
 
@@ -28,6 +30,8 @@ Below we show an example using MAF to transform a mixture of Gaussians into a un
 [3] Papamakarios, G., Pavlakou, T., and Murray, I. (2017). Masked Autoregressive Flow for Density Estimation. In Advances in Neural Information Processing Systems 30, I. Guyon, U.V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, eds. (Curran Associates, Inc.), pp. 2338–2347.
 
 [4] Kingma, D.P., and Dhariwal, P. (2018). Glow: Generative Flow with Invertible 1x1 Convolutions. In Advances in Neural Information Processing Systems 31, S. Bengio, H. Wallach, H. Larochelle, K. Grauman, N. Cesa-Bianchi, and R. Garnett, eds. (Curran Associates, Inc.), pp. 10215–10224.
+
+[5] Durkan, C., Bekasov, A., Murray, I., and Papamakarios, G. (2019). Neural Spline Flows.
 
 #### License
 
