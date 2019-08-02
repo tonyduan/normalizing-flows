@@ -20,7 +20,6 @@ def searchsorted(bin_locations, inputs, eps=1e-6):
         dim=-1
     ) - 1
 
-<<<<<<< HEAD
 def unconstrained_RQS(inputs, unnormalized_widths, unnormalized_heights,
                       unnormalized_derivatives, inverse=False,
                       tail_bound=1., min_bin_width=DEFAULT_MIN_BIN_WIDTH,
@@ -28,20 +27,6 @@ def unconstrained_RQS(inputs, unnormalized_widths, unnormalized_heights,
                       min_derivative=DEFAULT_MIN_DERIVATIVE):
     inside_intvl_mask = (inputs >= -tail_bound) & (inputs <= tail_bound)
     outside_interval_mask = ~inside_intvl_mask
-=======
-def unconstrained_rational_quadratic_spline(inputs,
-                                            unnormalized_widths,
-                                            unnormalized_heights,
-                                            unnormalized_derivatives,
-                                            inverse=False,
-                                            tails='linear',
-                                            tail_bound=1.,
-                                            min_bin_width=DEFAULT_MIN_BIN_WIDTH,
-                                            min_bin_height=DEFAULT_MIN_BIN_HEIGHT,
-                                            min_derivative=DEFAULT_MIN_DERIVATIVE):
-    inside_interval_mask = (inputs >= -tail_bound) & (inputs <= tail_bound)
-    outside_interval_mask = ~inside_interval_mask
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
 
     outputs = torch.zeros_like(inputs)
     logabsdet = torch.zeros_like(inputs)
@@ -54,26 +39,17 @@ def unconstrained_rational_quadratic_spline(inputs,
     outputs[outside_interval_mask] = inputs[outside_interval_mask]
     logabsdet[outside_interval_mask] = 0
 
-<<<<<<< HEAD
     outputs[inside_intvl_mask], logabsdet[inside_intvl_mask] = RQS(
         inputs=inputs[inside_intvl_mask],
         unnormalized_widths=unnormalized_widths[inside_intvl_mask, :],
         unnormalized_heights=unnormalized_heights[inside_intvl_mask, :],
         unnormalized_derivatives=unnormalized_derivatives[inside_intvl_mask, :],
-=======
-    outputs[inside_interval_mask], logabsdet[inside_interval_mask] = rational_quadratic_spline(
-        inputs=inputs[inside_interval_mask],
-        unnormalized_widths=unnormalized_widths[inside_interval_mask, :],
-        unnormalized_heights=unnormalized_heights[inside_interval_mask, :],
-        unnormalized_derivatives=unnormalized_derivatives[inside_interval_mask, :],
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
         inverse=inverse,
         left=-tail_bound, right=tail_bound, bottom=-tail_bound, top=tail_bound,
         min_bin_width=min_bin_width,
         min_bin_height=min_bin_height,
         min_derivative=min_derivative
     )
-<<<<<<< HEAD
     return outputs, logabsdet
 
 def RQS(inputs, unnormalized_widths, unnormalized_heights,
@@ -83,22 +59,6 @@ def RQS(inputs, unnormalized_widths, unnormalized_heights,
         min_derivative=DEFAULT_MIN_DERIVATIVE):
     if torch.min(inputs) < left or torch.max(inputs) > right:
         raise ValueError("Input outside domain")
-=======
-
-    return outputs, logabsdet
-
-def rational_quadratic_spline(inputs,
-                              unnormalized_widths,
-                              unnormalized_heights,
-                              unnormalized_derivatives,
-                              inverse=False,
-                              left=0., right=1., bottom=0., top=1.,
-                              min_bin_width=DEFAULT_MIN_BIN_WIDTH,
-                              min_bin_height=DEFAULT_MIN_BIN_HEIGHT,
-                              min_derivative=DEFAULT_MIN_DERIVATIVE):
-    if torch.min(inputs) < left or torch.max(inputs) > right:
-        raise transforms.InputOutsideDomain()
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
 
     num_bins = unnormalized_widths.shape[-1]
 
@@ -140,33 +100,18 @@ def rational_quadratic_spline(inputs,
     input_delta = delta.gather(-1, bin_idx)[..., 0]
 
     input_derivatives = derivatives.gather(-1, bin_idx)[..., 0]
-<<<<<<< HEAD
     input_derivatives_plus_one = derivatives[..., 1:].gather(-1, bin_idx)
     input_derivatives_plus_one = input_derivatives_plus_one[..., 0]
-=======
-    input_derivatives_plus_one = derivatives[..., 1:].gather(-1, bin_idx)[..., 0]
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
 
     input_heights = heights.gather(-1, bin_idx)[..., 0]
 
     if inverse:
-<<<<<<< HEAD
         a = (((inputs - input_cumheights) * (input_derivatives \
             + input_derivatives_plus_one - 2 * input_delta) \
             + input_heights * (input_delta - input_derivatives)))
         b = (input_heights * input_derivatives - (inputs - input_cumheights) \
             * (input_derivatives + input_derivatives_plus_one \
             - 2 * input_delta))
-=======
-        a = (((inputs - input_cumheights) * (input_derivatives
-                                             + input_derivatives_plus_one
-                                             - 2 * input_delta)
-              + input_heights * (input_delta - input_derivatives)))
-        b = (input_heights * input_derivatives
-             - (inputs - input_cumheights) * (input_derivatives
-                                              + input_derivatives_plus_one
-                                              - 2 * input_delta))
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
         c = - input_delta * (inputs - input_cumheights)
 
         discriminant = b.pow(2) - 4 * a * c
@@ -176,7 +121,6 @@ def rational_quadratic_spline(inputs,
         outputs = root * input_bin_widths + input_cumwidths
 
         theta_one_minus_theta = root * (1 - root)
-<<<<<<< HEAD
         denominator = input_delta \
                       + ((input_derivatives + input_derivatives_plus_one \
                       - 2 * input_delta) * theta_one_minus_theta)
@@ -185,21 +129,11 @@ def rational_quadratic_spline(inputs,
                                 + 2 * input_delta * theta_one_minus_theta \
                                 + input_derivatives * (1 - root).pow(2))
         logabsdet = torch.log(derivative_numerator) - 2 * torch.log(denominator)
-=======
-        denominator = input_delta + ((input_derivatives + input_derivatives_plus_one - 2 * input_delta)
-                                     * theta_one_minus_theta)
-        derivative_numerator = input_delta.pow(2) * (input_derivatives_plus_one * root.pow(2)
-                                                     + 2 * input_delta * theta_one_minus_theta
-                                                     + input_derivatives * (1 - root).pow(2))
-        logabsdet = torch.log(derivative_numerator) - 2 * torch.log(denominator)
-
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
         return outputs, -logabsdet
     else:
         theta = (inputs - input_cumwidths) / input_bin_widths
         theta_one_minus_theta = theta * (1 - theta)
 
-<<<<<<< HEAD
         numerator = input_heights * (input_delta * theta.pow(2) \
                     + input_derivatives * theta_one_minus_theta)
         denominator = input_delta + ((input_derivatives \
@@ -212,17 +146,4 @@ def rational_quadratic_spline(inputs,
                                 + 2 * input_delta * theta_one_minus_theta \
                                 + input_derivatives * (1 - theta).pow(2))
         logabsdet = torch.log(derivative_numerator) - 2 * torch.log(denominator)
-=======
-        numerator = input_heights * (input_delta * theta.pow(2)
-                                     + input_derivatives * theta_one_minus_theta)
-        denominator = input_delta + ((input_derivatives + input_derivatives_plus_one - 2 * input_delta)
-                                     * theta_one_minus_theta)
-        outputs = input_cumheights + numerator / denominator
-
-        derivative_numerator = input_delta.pow(2) * (input_derivatives_plus_one * theta.pow(2)
-                                                     + 2 * input_delta * theta_one_minus_theta
-                                                     + input_derivatives * (1 - theta).pow(2))
-        logabsdet = torch.log(derivative_numerator) - 2 * torch.log(denominator)
-
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
         return outputs, logabsdet
