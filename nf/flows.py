@@ -238,7 +238,6 @@ class OneByOneConv(nn.Module):
         return x, log_det
 
 
-<<<<<<< HEAD
 class NSF_AR(nn.Module):
     """
     Neural spline flow, auto-regressive.
@@ -246,15 +245,6 @@ class NSF_AR(nn.Module):
     [Durkan et al. 2019]
     """
     def __init__(self, dim, K = 5, B = 3, hidden_dim = 8, base_network = FCNN):
-=======
-class NSF(nn.Module):
-    """
-    Neural spline flow.
-
-    [Durkan et al. 2019]
-    """
-    def __init__(self, dim, K = 5, B = 2, hidden_dim = 64, base_network = FCNN):
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
         super().__init__()
         self.dim = dim
         self.K = K
@@ -281,13 +271,8 @@ class NSF(nn.Module):
             W, H = torch.softmax(W, dim = 1), torch.softmax(H, dim = 1)
             W, H = 2 * self.B * W, 2 * self.B * H
             D = F.softplus(D)
-<<<<<<< HEAD
             z[:, i], ld = unconstrained_RQS(
                 x[:, i], W, H, D, inverse=False, tail_bound=self.B)
-=======
-            z[:, i], ld = unconstrained_rational_quadratic_spline(
-                x[:, i], W, H, D, self.B)
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
             log_det += ld
         return z, log_det
 
@@ -304,7 +289,6 @@ class NSF(nn.Module):
             W, H = torch.softmax(W, dim = 1), torch.softmax(H, dim = 1)
             W, H = 2 * self.B * W, 2 * self.B * H
             D = F.softplus(D)
-<<<<<<< HEAD
             x[:, i], ld = unconstrained_RQS(
                 z[:, i], W, H, D, inverse=True, tail_bound=self.B)
             log_det += ld
@@ -366,9 +350,3 @@ class NSF_CL(nn.Module):
             upper, W, H, D, inverse=True, tail_bound=self.B)
         log_det += torch.sum(ld, dim = 1)
         return torch.cat([lower, upper], dim = 1), log_det
-=======
-            x[:, i], ld = unconstrained_rational_quadratic_spline(
-                z[:, i], W, H, D, self.B)
-            log_det += ld
-        return x, log_det
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9

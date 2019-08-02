@@ -77,24 +77,17 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(8, 3))
     plt.subplot(1, 3, 1)
-    plot_data(x, color="grey")
+    plot_data(x, color="black", alpha=0.5)
     plt.title("Training data")
     plt.subplot(1, 3, 2)
     plot_data(z.data, color="darkblue", alpha=0.5)
     plt.title("Latent space")
-<<<<<<< HEAD
     plt.subplot(1, 3, 3)
-=======
-    plt.show()
-    plt.savefig("./examples/latent_space.png")
-
->>>>>>> fd7d647d8788d3bfce0197e2329bae9049f1b1d9
     samples = model.sample(500).data
     plot_data(samples, color="black", alpha=0.5)
     plt.title("Generated samples")
     plt.savefig("./examples/ex.png")
     plt.show()
-    plt.savefig("./examples/samples.png")
 
     for f in flows:
         x = f(x)[0].data
