@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
-from nf.utils import *
+from nf.utils import unconstrained_RQS
 
 # supported non-linearities: note that the function must be invertible
 functional_derivatives = {
@@ -115,13 +115,13 @@ class FCNN(nn.Module):
         return self.network(x)
 
 
-class AffineCouplingLayer(nn.Module):
+class RealNVP(nn.Module):
     """
-    Non-volume preserving flow aka RealNVP.
+    Non-volume preserving flow.
 
     [Dinh et. al. 2017]
     """
-    def __init__(self, dim, hidden_dim = 128, base_network=FCNN):
+    def __init__(self, dim, hidden_dim = 8, base_network=FCNN):
         super().__init__()
         self.dim = dim
         self.t1 = base_network(dim // 2, dim // 2, hidden_dim)
@@ -162,7 +162,7 @@ class MAF(nn.Module):
 
     [Papamakarios et al. 2018]
     """
-    def __init__(self, dim, hidden_dim = 128, base_network=FCNN):
+    def __init__(self, dim, hidden_dim = 8, base_network=FCNN):
         super().__init__()
         self.dim = dim
         self.layers = nn.ModuleList()
@@ -238,13 +238,13 @@ class OneByOneConv(nn.Module):
         return x, log_det
 
 
-class NSF(nn.Module):
+class NSF_AR(nn.Module):
     """
-    Neural spline flow.
+    Neural spline flow, auto-regressive.
 
     [Durkan et al. 2019]
     """
-    def __init__(self, dim, K = 5, B = 2, hidden_dim = 64, base_network = FCNN):
+    def __init__(self, dim, K = 5, B = 3, hidden_dim = 8, base_network = FCNN):
         super().__init__()
         self.dim = dim
         self.K = K
@@ -271,8 +271,8 @@ class NSF(nn.Module):
             W, H = torch.softmax(W, dim = 1), torch.softmax(H, dim = 1)
             W, H = 2 * self.B * W, 2 * self.B * H
             D = F.softplus(D)
-            z[:, i], ld = unconstrained_rational_quadratic_spline(
-                x[:, i], W, H, D, self.B)
+            z[:, i], ld = unconstrained_RQS(
+                x[:, i], W, H, D, inverse=False, tail_bound=self.B)
             log_det += ld
         return z, log_det
 
@@ -289,7 +289,64 @@ class NSF(nn.Module):
             W, H = torch.softmax(W, dim = 1), torch.softmax(H, dim = 1)
             W, H = 2 * self.B * W, 2 * self.B * H
             D = F.softplus(D)
-            x[:, i], ld = unconstrained_rational_quadratic_spline(
-                z[:, i], W, H, D, self.B)
+            x[:, i], ld = unconstrained_RQS(
+                z[:, i], W, H, D, inverse=True, tail_bound=self.B)
             log_det += ld
         return x, log_det
+
+
+class NSF_CL(nn.Module):
+    """
+    Neural spline flow, coupling layer.
+
+    [Durkan et al. 2019]
+    """
+    def __init__(self, dim, K = 5, B = 3, hidden_dim = 8, base_network = FCNN):
+        super().__init__()
+        self.dim = dim
+        self.K = K
+        self.B = B
+        self.f1 = base_network(dim // 2, (3 * K - 1) * dim // 2, hidden_dim)
+        self.f2 = base_network(dim // 2, (3 * K - 1) * dim // 2, hidden_dim)
+
+    def forward(self, x):
+        log_det = torch.zeros(x.shape[0])
+        lower, upper = x[:, :self.dim // 2], x[:, self.dim // 2:]
+        out = self.f1(lower).reshape(-1, self.dim // 2, 3 * self.K - 1)
+        W, H, D = torch.split(out, self.K, dim = 2)
+        W, H = torch.softmax(W, dim = 2), torch.softmax(H, dim = 2)
+        W, H = 2 * self.B * W, 2 * self.B * H
+        D = F.softplus(D)
+        upper, ld = unconstrained_RQS(
+            upper, W, H, D, inverse=False, tail_bound=self.B)
+        log_det += torch.sum(ld, dim = 1)
+        out = self.f2(upper).reshape(-1, self.dim // 2, 3 * self.K - 1)
+        W, H, D = torch.split(out, self.K, dim = 2)
+        W, H = torch.softmax(W, dim = 2), torch.softmax(H, dim = 2)
+        W, H = 2 * self.B * W, 2 * self.B * H
+        D = F.softplus(D)
+        lower, ld = unconstrained_RQS(
+            lower, W, H, D, inverse=False, tail_bound=self.B)
+        log_det += torch.sum(ld, dim = 1)
+        return torch.cat([lower, upper], dim = 1), log_det
+
+    def backward(self, z):
+        log_det = torch.zeros(z.shape[0])
+        lower, upper = z[:, :self.dim // 2], z[:, self.dim // 2:]
+        out = self.f2(upper).reshape(-1, self.dim // 2, 3 * self.K - 1)
+        W, H, D = torch.split(out, self.K, dim = 2)
+        W, H = torch.softmax(W, dim = 2), torch.softmax(H, dim = 2)
+        W, H = 2 * self.B * W, 2 * self.B * H
+        D = F.softplus(D)
+        lower, ld = unconstrained_RQS(
+            lower, W, H, D, inverse=True, tail_bound=self.B)
+        log_det += torch.sum(ld, dim = 1)
+        out = self.f1(lower).reshape(-1, self.dim // 2, 3 * self.K - 1)
+        W, H, D = torch.split(out, self.K, dim = 2)
+        W, H = torch.softmax(W, dim = 2), torch.softmax(H, dim = 2)
+        W, H = 2 * self.B * W, 2 * self.B * H
+        D = F.softplus(D)
+        upper, ld = unconstrained_RQS(
+            upper, W, H, D, inverse=True, tail_bound=self.B)
+        log_det += torch.sum(ld, dim = 1)
+        return torch.cat([lower, upper], dim = 1), log_det
