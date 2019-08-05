@@ -213,10 +213,11 @@ class OneByOneConv(nn.Module):
         self.dim = dim
         W, _ = sp.linalg.qr(np.random.randn(dim, dim))
         P, L, U = sp.linalg.lu(W)
-        self.P = torch.tensor(P, dtype=torch.float)
-        self.L = nn.Parameter(torch.tensor(L, dtype=torch.float))
-        self.S = nn.Parameter(torch.tensor(np.diag(U), dtype=torch.float))
-        self.U = nn.Parameter(torch.tensor(U - np.diag(U), dtype=torch.float))
+        self.P = torch.tensor(P, dtype = torch.float)
+        self.L = nn.Parameter(torch.tensor(L, dtype = torch.float))
+        self.S = nn.Parameter(torch.tensor(np.diag(U), dtype = torch.float))
+        self.U = nn.Parameter(torch.triu(torch.tensor(U, dtype = torch.float),
+                              diagonal = 1))
         self.W_inv = None
 
     def forward(self, x):
@@ -290,7 +291,7 @@ class NSF_AR(nn.Module):
             W, H = 2 * self.B * W, 2 * self.B * H
             D = F.softplus(D)
             x[:, i], ld = unconstrained_RQS(
-                z[:, i], W, H, D, inverse=True, tail_bound=self.B)
+                z[:, i], W, H, D, inverse = True, tail_bound = self.B)
             log_det += ld
         return x, log_det
 
@@ -347,6 +348,6 @@ class NSF_CL(nn.Module):
         W, H = 2 * self.B * W, 2 * self.B * H
         D = F.softplus(D)
         upper, ld = unconstrained_RQS(
-            upper, W, H, D, inverse=True, tail_bound=self.B)
+            upper, W, H, D, inverse = True, tail_bound = self.B)
         log_det += torch.sum(ld, dim = 1)
         return torch.cat([lower, upper], dim = 1), log_det
