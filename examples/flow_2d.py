@@ -40,6 +40,7 @@ if __name__ == "__main__":
     argparser.add_argument("--iterations", default=500, type=int)
     argparser.add_argument("--use-mixture", action="store_true")
     argparser.add_argument("--convolve", action="store_true")
+    argparser.add_argument("--actnorm", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
@@ -50,6 +51,9 @@ if __name__ == "__main__":
     if args.convolve:
         convs = [OneByOneConv(dim=2) for _ in range(args.flows)]
         flows = list(itertools.chain(*zip(convs, flows)))
+    if args.actnorm:
+        actnorms = [ActNorm(dim=2) for _ in range(args.flows)]
+        flows = list(itertools.chain(*zip(actnorms, flows)))
     prior = MultivariateNormal(torch.zeros(2), torch.eye(2))
     model = NormalizingFlowModel(prior, flows)
 
