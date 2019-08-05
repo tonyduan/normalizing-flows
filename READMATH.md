@@ -12,6 +12,7 @@ We implement so far the following flows:
 - Real NVP; affine coupling layer; $f(x^{(2)}) = t(x^{(1)}) + x^{(2)}\odot\exp s(x^{(1)}) $ [2]
 - Masked Autoregressive Flow (MAF); $f(x_i) = (x_i - \mu(x_{<i})) / \exp(\alpha(x_{<i}))$ [3]
 - Invertible 1x1 Convolution; $f(x) = Wx$ where $W$ is square [4]
+- ActNorm; $f(x) = Wx + b$ where $W$ is diagonal and $b$ is a constant [4]
 - Autoregressive Neural Spline Flow (NSF-AF); $f(x_i) = \mathrm{RQS}_{\theta(x_{<i})}(x_i)$ [5] 
 - Coupling Neural Spline Flow (NSF-CL); $f(x^{(2)}) = \mathrm{RQS}_{\theta(x^{(1)})}(x^{(2)})$ [5] 
 
