@@ -1,4 +1,6 @@
 import numpy as np
+import scipy as sp
+import scipy.stats
 import itertools
 import logging
 import matplotlib.pyplot as plt
@@ -14,21 +16,13 @@ from nf.models import NormalizingFlowModel
 
 
 def gen_data(n=512):
-    return np.r_[np.random.randn(n // 3, 2) + np.array([0, 6]),
-                 np.random.randn(n // 3, 2) + np.array([2.5, 3]),
-                 np.random.randn(n // 3, 2) + np.array([-2.5, 3])]
+    return np.r_[np.random.randn(n // 2, 1) + np.array([2]),
+                 np.random.randn(n // 2, 1) + np.array([-2])]
 
-
-def gen_mixture_data(n=512):
-    return np.r_[np.random.randn(n // 2, 2) + np.array([5, 3]),
-                 np.random.randn(n // 2, 2) + np.array([-5, 3])]
-
-
-
-def plot_data(x, **kwargs):
-    plt.scatter(x[:,0], x[:,1], marker="x", **kwargs)
-    plt.xlim((-3, 3))
-    plt.ylim((-3, 3))
+def plot_data(x, bandwidth = 0.2, **kwargs):
+    kde = sp.stats.gaussian_kde(x[:,0])
+    x_axis = np.linspace(-5, 5, 200)
+    plt.plot(x_axis, kde(x_axis), **kwargs)
 
 
 if __name__ == "__main__":
@@ -36,32 +30,23 @@ if __name__ == "__main__":
     argparser = ArgumentParser()
     argparser.add_argument("--n", default=512, type=int)
     argparser.add_argument("--flows", default=2, type=int)
-    argparser.add_argument("--flow", default="NSF_CL", type=str)
+    argparser.add_argument("--flow", default="NSF_AR", type=str)
     argparser.add_argument("--iterations", default=500, type=int)
-    argparser.add_argument("--use-mixture", action="store_true")
-    argparser.add_argument("--convolve", action="store_true")
-    argparser.add_argument("--actnorm", action="store_true")
     args = argparser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
     flow = eval(args.flow)
-    flows = [flow(dim=2) for _ in range(args.flows)]
-    if args.convolve:
-        convs = [OneByOneConv(dim=2) for _ in range(args.flows)]
-        flows = list(itertools.chain(*zip(convs, flows)))
-    if args.actnorm:
-        actnorms = [ActNorm(dim=2) for _ in range(args.flows)]
-        flows = list(itertools.chain(*zip(actnorms, flows)))
-    prior = MultivariateNormal(torch.zeros(2), torch.eye(2))
+    flows = [flow(dim=1) for _ in range(args.flows)]
+    prior = MultivariateNormal(torch.zeros(1), torch.eye(1))
     model = NormalizingFlowModel(prior, flows)
 
     optimizer = optim.Adam(model.parameters(), lr=0.005)
-    if args.use_mixture:
-        x = torch.Tensor(gen_mixture_data(args.n))
-    else:
-        x = torch.Tensor(gen_data(args.n))
+    x = torch.Tensor(gen_data(args.n))
+
+    plot_data(x, color = "black")
+    plt.show()
 
     for i in range(x.shape[1]):
         x[:,i] = (x[:,i] - torch.mean(x[:,i])) / torch.std(x[:,i])
@@ -90,11 +75,5 @@ if __name__ == "__main__":
     samples = model.sample(500).data
     plot_data(samples, color="black", alpha=0.5)
     plt.title("Generated samples")
-    plt.savefig("./examples/ex_2d.png")
+    plt.savefig("./examples/ex_1d.png")
     plt.show()
-
-    for f in flows:
-        x = f(x)[0].data
-        plot_data(x, color="black", alpha=0.5)
-        plt.show()
-

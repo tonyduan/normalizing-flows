@@ -18,9 +18,11 @@ We implement so far the following flows:
 
 Note that planar and radial flows admit no algebraic inverse.
 
-Below we show an example using MAF to transform a mixture of Gaussians into a unit Gaussian.
+Below we show an example transforming a mixture of Gaussians into a unit Gaussian.
 
-![](examples/ex.png)
+![](examples/ex_2d.png)
+
+![](examples/ex_1d.png)
 
 #### References
 
