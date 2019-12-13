@@ -59,7 +59,7 @@ class Planar(nn.Module):
         log_det = torch.log(torch.abs(1 + phi @ u) + 1e-4)
         return z, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         raise NotImplementedError("Planar flow has no algebraic inverse.")
 
 
@@ -142,7 +142,7 @@ class RealNVP(nn.Module):
                   torch.sum(s2_transformed, dim=1)
         return z, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         lower, upper = z[:,:self.dim // 2], z[:,self.dim // 2:]
         t2_transformed = self.t2(upper)
         s2_transformed = self.s2(upper)
@@ -187,7 +187,7 @@ class MAF(nn.Module):
             log_det -= alpha
         return z.flip(dims=(1,)), log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         x = torch.zeros_like(z)
         log_det = torch.zeros(z.shape[0])
         z = z.flip(dims=(1,))
@@ -219,7 +219,7 @@ class ActNorm(nn.Module):
         log_det = torch.sum(self.log_sigma)
         return z, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         x = (z - self.mu) / torch.exp(self.log_sigma)
         log_det = -torch.sum(self.log_sigma)
         return x, log_det
@@ -250,7 +250,7 @@ class OneByOneConv(nn.Module):
         log_det = torch.sum(torch.log(torch.abs(self.S)))
         return z, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         if not self.W_inv:
             L = torch.tril(self.L, diagonal = -1) + \
                 torch.diag(torch.ones(self.dim))
@@ -300,7 +300,7 @@ class NSF_AR(nn.Module):
             log_det += ld
         return z, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         x = torch.zeros_like(z)
         log_det = torch.zeros(x.shape[0])
         for i in range(self.dim):
@@ -354,7 +354,7 @@ class NSF_CL(nn.Module):
         log_det += torch.sum(ld, dim = 1)
         return torch.cat([lower, upper], dim = 1), log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         log_det = torch.zeros(z.shape[0])
         lower, upper = z[:, :self.dim // 2], z[:, self.dim // 2:]
         out = self.f2(upper).reshape(-1, self.dim // 2, 3 * self.K - 1)
