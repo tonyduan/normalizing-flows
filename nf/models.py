@@ -18,17 +18,17 @@ class NormalizingFlowModel(nn.Module):
         z, prior_logprob = x, self.prior.log_prob(x)
         return z, prior_logprob, log_det
 
-    def backward(self, z):
+    def inverse(self, z):
         m, _ = z.shape
         log_det = torch.zeros(m)
         for flow in self.flows[::-1]:
-            z, ld = flow.backward(z)
+            z, ld = flow.inverse(z)
             log_det += ld
         x = z
         return x, log_det
 
     def sample(self, n_samples):
         z = self.prior.sample((n_samples,))
-        x, _ = self.backward(z)
+        x, _ = self.inverse(z)
         return x
 
