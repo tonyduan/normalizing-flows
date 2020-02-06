@@ -50,7 +50,7 @@ class Planar(nn.Module):
             u = self.u
         elif self.h == torch.tanh:
             scal = torch.log(1+torch.exp(self.w @ self.u)) - self.w @ self.u - 1
-            u = self.u + scal * self.w / torch.norm(self.w)
+            u = self.u + scal * self.w / torch.norm(self.w) ** 2
         else:
             raise NotImplementedError("Non-linearity is not supported.")
         lin = torch.unsqueeze(x @ self.w, 1) + self.b
