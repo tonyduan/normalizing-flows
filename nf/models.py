@@ -3,7 +3,7 @@ import torch.nn as nn
 
 
 class NormalizingFlowModel(nn.Module):
-    
+
     def __init__(self, prior, flows):
         super().__init__()
         self.prior = prior
