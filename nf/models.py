@@ -29,5 +29,4 @@ class NormalizingFlowModel(nn.Module):
     def sample(self, n_samples):
         z = self.prior.sample((n_samples,))
         x, _ = self.inverse(z)
-        return x.to('cpu')
-
+        return x
