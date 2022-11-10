@@ -15,7 +15,7 @@ We implement so far the following flows:
 - Invertible 1x1 Convolution; $f(x) = Wx$ where $W$ is square [4]
 - ActNorm; $f(x) = Wx + b$ where $W$ is diagonal and $b$ is a constant [4]
 - Autoregressive Neural Spline Flow (NSF-AF); $f(x_i) = \mathrm{RQS}_{\theta(x_{\textless i})}(x_i)$ [5]
-- Coupling Neural Spline Flow (NSF-CL); $f(x^{(2)}) = \mathrm{RQS}_{\theta(x^{(1)})}(x^{(2)})$ [5]
+- Coupling Neural Spline Flow (NSF-CL); $f(x^{(2)}) = \text{RQS}_{\theta(x^{(1)})}(x^{(2)})$ [5]
 
 Note that planar and radial flows admit no algebraic inverse.
 
