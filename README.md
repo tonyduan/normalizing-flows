@@ -11,10 +11,10 @@ We implement so far the following flows:
 - Planar flows; $f(x) = x + u h(w^\intercal z + b)$
 - Radial flows; $f(x) = x + \frac{\beta}{\alpha + |x - x_0|}(x - x_0)$
 - Real NVP; affine coupling layer; $f(x^{(2)}) = t(x^{(1)}) + x^{(2)}\odot\exp s(x^{(1)})$ [2]
-- Masked Autoregressive Flow (MAF); $f(x_i) = (x_i - \mu(x_{\text{\textless} i})) / \exp(\alpha(x_{\text{\textless} i}))$ [3]
+- Masked Autoregressive Flow (MAF); $f(x_i) = (x_i - \mu(x_{\textless i})) / \exp(\alpha(x_{\textless i}))$ [3]
 - Invertible 1x1 Convolution; $f(x) = Wx$ where $W$ is square [4]
 - ActNorm; $f(x) = Wx + b$ where $W$ is diagonal and $b$ is a constant [4]
-- Autoregressive Neural Spline Flow (NSF-AF); $f(x_i) = \mathrm{RQS}_{\theta(x_{\text{\textless} i})}(x_i)$ [5]
+- Autoregressive Neural Spline Flow (NSF-AF); $f(x_i) = \mathrm{RQS}_{\theta(x_{\textless i})}(x_i)$ [5]
 - Coupling Neural Spline Flow (NSF-CL); $f(x^{(2)}) = \mathrm{RQS}_{\theta(x^{(1)})}(x^{(2)})$ [5]
 
 Note that planar and radial flows admit no algebraic inverse.
