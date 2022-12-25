@@ -1,16 +1,15 @@
 import numpy as np
 import itertools
 import logging
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from argparse import ArgumentParser
-from torch.distributions import MultivariateNormal
 
-from nf.flows import *
-from nf.models import NormalizingFlowModel
+from src.flows import *
+from src.models import NormalizingFlowModel
 
 
 def gen_data(n=512):
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     argparser.add_argument("--actnorm", action="store_true")
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
     flow = eval(args.flow)
@@ -54,8 +53,8 @@ if __name__ == "__main__":
     if args.actnorm:
         actnorms = [ActNorm(dim=2) for _ in range(args.flows)]
         flows = list(itertools.chain(*zip(actnorms, flows)))
-    prior = MultivariateNormal(torch.zeros(2), torch.eye(2))
-    model = NormalizingFlowModel(prior, flows)
+
+    model = NormalizingFlowModel(dim=2, flows=flows)
 
     optimizer = optim.Adam(model.parameters(), lr=0.005)
     if args.use_mixture:

@@ -1,17 +1,18 @@
 import torch
 import torch.nn as nn
+from torch.distributions import MultivariateNormal
 
 
 class NormalizingFlowModel(nn.Module):
 
-    def __init__(self, prior, flows):
+    def __init__(self, dim, flows):
         super().__init__()
-        self.prior = prior
+        self.prior = MultivariateNormal(torch.zeros(dim), torch.eye(dim))
         self.flows = nn.ModuleList(flows)
 
     def forward(self, x):
-        m, _ = x.shape
-        log_det = torch.zeros(m)
+        bsz, _ = x.shape
+        log_det = torch.zeros(bsz)
         for flow in self.flows:
             x, ld = flow.forward(x)
             log_det += ld
@@ -19,8 +20,8 @@ class NormalizingFlowModel(nn.Module):
         return z, prior_logprob, log_det
 
     def inverse(self, z):
-        m, _ = z.shape
-        log_det = torch.zeros(m)
+        bsz, _ = z.shape
+        log_det = torch.zeros(bsz)
         for flow in self.flows[::-1]:
             z, ld = flow.inverse(z)
             log_det += ld
@@ -31,4 +32,3 @@ class NormalizingFlowModel(nn.Module):
         z = self.prior.sample((n_samples,))
         x, _ = self.inverse(z)
         return x
-

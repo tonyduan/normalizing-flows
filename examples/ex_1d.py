@@ -3,16 +3,15 @@ import scipy as sp
 import scipy.stats
 import itertools
 import logging
-import matplotlib.pyplot as plt
 
+import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from argparse import ArgumentParser
-from torch.distributions import MultivariateNormal
 
-from nf.flows import *
-from nf.models import NormalizingFlowModel
+from src.flows import *
+from src.models import NormalizingFlowModel
 
 
 def gen_data(n=512):
@@ -34,19 +33,15 @@ if __name__ == "__main__":
     argparser.add_argument("--iterations", default=500, type=int)
     args = argparser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
     flow = eval(args.flow)
     flows = [flow(dim=1) for _ in range(args.flows)]
-    prior = MultivariateNormal(torch.zeros(1), torch.eye(1))
-    model = NormalizingFlowModel(prior, flows)
+    model = NormalizingFlowModel(dim=1, flows=flows)
 
     optimizer = optim.Adam(model.parameters(), lr=0.005)
     x = torch.Tensor(gen_data(args.n))
-
-    plot_data(x, color = "black")
-    plt.show()
 
     for i in range(x.shape[1]):
         x[:,i] = (x[:,i] - torch.mean(x[:,i])) / torch.std(x[:,i])
