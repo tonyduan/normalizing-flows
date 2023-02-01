@@ -28,6 +28,7 @@ def plot_data(x, **kwargs):
     plt.scatter(x[:,0], x[:,1], marker="x", **kwargs)
     plt.xlim((-3, 3))
     plt.ylim((-3, 3))
+    plt.axis("off")
 
 
 if __name__ == "__main__":

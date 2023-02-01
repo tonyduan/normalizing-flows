@@ -22,6 +22,7 @@ def plot_data(x, bandwidth = 0.2, **kwargs):
     kde = sp.stats.gaussian_kde(x[:,0])
     x_axis = np.linspace(-5, 5, 200)
     plt.plot(x_axis, kde(x_axis), **kwargs)
+    plt.axis("off")
 
 
 if __name__ == "__main__":

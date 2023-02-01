@@ -4,14 +4,10 @@ Last update: December 2022.
 
 ---
 
-Implementations of normalizing flow models [1] for generative modeling in PyTorch.
+Lightweight normalizing flows for generative modeling in PyTorch.
 
-```mermaid
-graph LR;
-  Z --> X;
-```
+#### Setup
 
-A normalizing flow assumes a model over continuous variables
 ```math
 \begin{align*}
 \mathbf{x} & = f_\theta^{-1}(\mathbf{z}) & \mathbf{z} & = f_\theta(\mathbf{x}),
@@ -21,7 +17,7 @@ A normalizing flow assumes a model over continuous variables
 where $f:\mathbb{R}^d \mapsto \mathbb{R}^d$ is an invertible function. The Change of Variables formula tells us that
 ```math
 \begin{align*}
-\underset{\text{over }\mathbf{x}}{p(\mathbf{x})} &= \underset{\text{over }\mathbf{z}}{p\left(f_\theta(\mathbf{x})\right)} \left|\mathrm{det}\left(\frac{\partial f_\theta \mathbf{x}}{\partial \mathbf{x}}\right)\right|
+\underbrace{p(\mathbf{x})}_{\text{over }\mathbf{x}} &= \underbrace{p\left(f_\theta(\mathbf{x})\right)}_{\text{over }\mathbf{z}} \left|\mathrm{det}\left(\frac{\partial f_\theta \mathbf{x}}{\partial \mathbf{x}}\right)\right|
 \end{align*}
 ```
 
@@ -29,26 +25,24 @@ Here $\frac{\partial f_\theta\mathbf{x}}{\partial \mathbf{x}}$ denotes the $d \t
 
 We typically choose a simple distribution over the latent space, $p(\mathbf{z})\sim N(\mathbf{0},\mathbf{I})$.
 
-Suppose we compose functions $f_\theta(x) = f_1\circ f_2 \circ \dots f_k(x;\theta)$. The log-likelihood decomposes nicely.
+Suppose we compose functions $f_\theta(\mathbf{x}) = f_1\circ f_2 \circ \dots f_k(\mathbf{x};\theta)$. The log-likelihood decomposes nicely.
 ```math
 \begin{align*}
 \log p(\mathbf{x}) & = \log p\left(f_\theta(\mathbf{x}\right)) + \sum_{i=1}^k\log \mathrm{det}\frac{\partial f_i(\mathbf{x};\theta)}{\partial \mathbf{x}}
 \end{align*}
 ```
-Sampling can be done easily as well, as long as $f_\theta^{-1}$ is tractable.
+Sampling can be done easily, as long as $f_\theta^{-1}$ is tractable.
 
-**Implementations**
+#### Implemented Flows
 
-We implement the following flows:
-
-**Planar and radial flows** [1]. Note these have no algebraic inverse $f^{-1}(x)$.
+**Planar and radial flows** [1]. Note these have no algebraic inverse $f^{-1}(\mathbf{x})$.
 ```math
 \begin{align*}
-f(x) & = x + uh(w^\top z + b)\\
-f(x) & = x + \frac{\beta(x-x_0)}{\alpha + \|x-x_0\|}
+f(\mathbf{x}) & = \mathbf{x} + \mathbf{u}h(\mathbf{w}^\top \mathbf{z} + b)\\
+f(\mathbf{x}) & = \mathbf{x} + \frac{\beta(\mathbf{x}-\mathbf{x}_0)}{\alpha + \|\mathbf{x}-\mathbf{x}_0\|}
 \end{align*}
 ```
-**Real NVP** [2]. Partition the vector $\mathbf{x}$ into components $\mathbf{x}^{(1)},\mathbf{x}^{(2)}$. Let $s,t$ be arbitrary neural networks mapping $\mathbb{R}^d \mapsto \mathbb{R}^d$.
+**Real NVP** [2]. Partition the vector $\mathbf{x}$ into components $\mathbf{x}^{(1)},\mathbf{x}^{(2)}$. Let $s,t$ be arbitrary neural networks $\mathbb{R}^d \mapsto \mathbb{R}^d$.
 ```math
 \begin{align*}
 f(\mathbf{x}^{(1)}) &= t(\mathbf{x}^{(2)}) + \mathbf{x}^{(1)}\odot \exp s(\mathbf{x}^{(2)})\\
@@ -79,7 +73,7 @@ f(\mathbf{x}^{(1)}) & = \mathrm{RQS}_{g(\mathbf{x}^{(2)})}(\mathbf{x}^{(1)}) \te
 f(\mathbf{x}^{(2)}) & = \mathrm{RQS}_{g(\mathbf{x}^{(1)})}(\mathbf{x}^{(2)})
 \end{align*}
 ```
-**Example**
+#### Examples
 
 Below we show examples (in 1D and 2D) transforming a mixture of Gaussians into a unit Gaussian.
 
