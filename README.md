@@ -28,7 +28,7 @@ We typically choose a simple distribution over the latent space, $p(\mathbf{z})\
 Suppose we compose functions $f_\theta(\mathbf{x}) = f_1\circ f_2 \circ \dots f_k(\mathbf{x};\theta)$. The log-likelihood decomposes nicely.
 ```math
 \begin{align*}
-\log p(\mathbf{x}) & = \log p\left(f_\theta(\mathbf{x}\right)) + \sum_{i=1}^k\log\left\|\mathrm{det}\frac{\partial f_i(\mathbf{x};\theta)}{\partial \mathbf{x}}\right\|
+\log p(\mathbf{x}) & = \log p\left(f_\theta(\mathbf{x}\right)) + \sum_{i=1}^k\log\left|\mathrm{det}\frac{\partial f_i(\mathbf{x};\theta)}{\partial \mathbf{x}}\right|
 \end{align*}
 ```
 Sampling can be done easily, as long as $f_\theta^{-1}$ is tractable.
